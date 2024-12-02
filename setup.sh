@@ -32,7 +32,7 @@ setup_user()
 
     # Disable password auth
     passwd -l "$USERNAME"
-    echo "Password auth disabled for "$USERNAME."
+    echo "Password auth disabled for $USERNAME."
 }
 
 # Give sudo for least privilege commands
