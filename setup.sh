@@ -1,4 +1,3 @@
-```script
 #!/bin/bash
 
 # Ensure the script is run as root
@@ -48,4 +47,3 @@ setup_user
 setup_sudo
 
 echo "User $USERNAME is set up with restricted sudo privileges and SSH key-based access only."
-```
