@@ -1,3 +1,4 @@
+```script
 #!/bin/bash
 
 # Ensure the script is run as root
@@ -16,7 +17,7 @@ SUDOERS_FILE="/etc/sudoers.d/$USERNAME"
 # Function to create user and set up SSH key-based authentication
 setup_user() {
     # Create the user and set their shell
-    useradd -m -s /bin/bash "$USERNAME"
+    useradd -r -m -s /bin/bash "$USERNAME"
     echo "User $USERNAME created."
 
     # Create SSH directory and set permissions
@@ -27,7 +28,7 @@ setup_user() {
     chown -R "$USERNAME:$USERNAME" "$AUTHORIZED_KEYS_DIR"
     echo "SSH directory and permissions set for $USERNAME."
 
-        # Add ssh key
+	# Add ssh key
     echo "$SSH_KEY" > "$AUTHORIZED_KEYS_FILE"
 
     # Disable password auth
@@ -47,3 +48,4 @@ setup_user
 setup_sudo
 
 echo "User $USERNAME is set up with restricted sudo privileges and SSH key-based access only."
+```
