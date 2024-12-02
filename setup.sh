@@ -17,7 +17,7 @@ SUDOERS_FILE="/etc/sudoers.d/$USERNAME"
 # Function to create user and set up SSH key-based authentication
 setup_user() {
     # Create the user and set their shell
-    useradd -r -m -s /bin/bash "$USERNAME"
+    useradd -r -s /bin/bash "$USERNAME"
     echo "User $USERNAME created."
 
     # Create SSH directory and set permissions
