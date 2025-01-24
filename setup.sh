@@ -1,6 +1,5 @@
 #!/bin/bash
 
-# Root check
 if [[ $EUID -ne 0 ]]; then
     echo "This script must be run as root." >&2
     exit 1
@@ -15,17 +14,21 @@ SUDOERS_FILE="/etc/sudoers.d/$USERNAME"
 
 setup_user()
 {
-    
     if id $USERNAME >/dev/null 2>&1; then
-        echo "User \"$USERNAME\"already exists, exiting." >&2
+        echo "User \"$USERNAME\" already exists, exiting." >&2
         exit 1
     fi
-    
+
     if test -d /home/$USERNAME; then
-        echo "Directory  /home/\"$USERNAME\"already exists, exiting." >&2
+        echo "Directory /home/\"$USERNAME\" already exists, exiting." >&2
         exit 1
     fi
-    
+
+    if id "900" >/dev/null 2>&1; then
+        echo "Default UID 900 is in use. Exiting." >&2
+        exit 1
+    fi
+
     # Create system user with home directory. Don't know if it needs to be bash but bash definitely works.
     useradd -r -m -u 900 -s /bin/bash "$USERNAME"
     # Create/set permissions for .ssh & .ssh/authorized_keys
@@ -45,11 +48,22 @@ setup_user()
 # Give sudo for least privilege commands
 setup_sudo()
 {
+    if ! test -d "/etc/sudoers.d"; then
+        echo "Directory \"/etc/sudoers.d/\" does not exist, exiting." >&2
+        exit 1
+    fi
+
+    if test -d SUDOERS_FILE; then
+        echo "File \"$SUDOERS_FILE\" already exists, exiting." >&2
+        exit 1
+    fi
+
     cat > "$SUDOERS_FILE" << EOF
 $USERNAME ALL=(ALL) NOPASSWD: /usr/bin/echo, /usr/bin/lspci, /usr/sbin/dmidecode, /usr/sbin/smbios, /usr/sbin/lvs, /usr/sbin/pvs, /usr/sbin/vgs, /usr/sbin/ifconfig, /usr/sbin/lshw
 EOF
     chmod 440 "$SUDOERS_FILE"
 }
 
+echo "User lnsw setup successfully."
 setup_user
 setup_sudo
