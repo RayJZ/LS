@@ -1,12 +1,46 @@
 #!/bin/bash
+set -euo pipefail
+
+# Trap errors and remove partial files
+cleanup()
+{
+    userdel -r "${USERNAME}" 2>/dev/null
+    rm -f "${SUDOERS_FILE}" 2>/dev/null
+}
+trap cleanup EXIT
 
 USERNAME="lnsw"
-UID="900"
+UID=900
 # Marble LS pub key
 SSH_KEY="ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIIhejUPFR+fFUPFs3pulV0QNd1u2+Z5U769aWDVwsEcX nsoadmin@marble"
 AUTHORIZED_KEYS_DIR="/home/$USERNAME/.ssh"
 AUTHORIZED_KEYS_FILE="$AUTHORIZED_KEYS_DIR/authorized_keys"
 SUDOERS_FILE="/etc/sudoers.d/$USERNAME"
+
+# Create system user with desired UID
+setup_user()
+{
+    # Create system user with home directory.
+    useradd -r -m -u $UID -s /bin/bash "$USERNAME"
+    # Create/set permissions for .ssh & .ssh/authorized_keys
+    mkdir -p "$AUTHORIZED_KEYS_DIR"
+    chmod 700 "$AUTHORIZED_KEYS_DIR"
+    touch "$AUTHORIZED_KEYS_FILE"
+    chmod 600 "$AUTHORIZED_KEYS_FILE"
+    chown -R "$USERNAME:$USERNAME" "$AUTHORIZED_KEYS_DIR"
+
+    # Add ssh key
+    echo "$SSH_KEY" > "$AUTHORIZED_KEYS_FILE"
+}
+
+# Give passwordless sudo for least privilege commands
+setup_sudo()
+{
+    cat > "$SUDOERS_FILE" << EOF
+$USERNAME ALL=(ALL) NOPASSWD: /usr/bin/echo, /usr/bin/lspci, /usr/sbin/dmidecode, /usr/sbin/smbios, /usr/sbin/lvs, /usr/sbin/pvs, /usr/sbin/vgs, /usr/sbin/ifconfig, /usr/sbin/lshw
+EOF
+    chmod 440 "$SUDOERS_FILE"
+}
 
 # Test for root
 if [[ $EUID -ne 0 ]]; then
@@ -21,7 +55,7 @@ if ! test -d "/etc/sudoers.d"; then
 fi
 
 # Test to see if sudo file for user has already been created
-if test -d SUDOERS_FILE; then
+if test -f $SUDOERS_FILE; then
     echo "File \"$SUDOERS_FILE\" already exists, exiting." >&2
     exit 1
 fi
@@ -39,8 +73,8 @@ if test -d /home/$USERNAME; then
 fi
 
 # Test if UID is in already use.
-if id $UID >/dev/null 2>&1; then
-    echo "Default UID $UID is in use. Exiting." >&2
+if getent passwd $UID >/dev/null 2>&1; then
+    echo "UID $UID is in use. Exiting." >&2
     exit 1
 fi
 
@@ -50,33 +84,7 @@ if ! pgrep -x "sshd" > /dev/null; then
   exit 1
 fi
 
-setup_user()
-{
-    # Create system user with home directory.
-    useradd -r -m -u $UID -s /bin/bash "$USERNAME"
-    # Create/set permissions for .ssh & .ssh/authorized_keys
-    mkdir -p "$AUTHORIZED_KEYS_DIR"
-    chmod 700 "$AUTHORIZED_KEYS_DIR"
-    touch "$AUTHORIZED_KEYS_FILE"
-    chmod 600 "$AUTHORIZED_KEYS_FILE"
-    chown -R "$USERNAME:$USERNAME" "$AUTHORIZED_KEYS_DIR"
-
-    # Add ssh key
-    echo "$SSH_KEY" > "$AUTHORIZED_KEYS_FILE"
-
-    # Disable password auth
-    passwd -l "$USERNAME"
-}
-
-# Give passwordless sudo for least privilege commands
-setup_sudo()
-{
-    cat > "$SUDOERS_FILE" << EOF
-$USERNAME ALL=(ALL) NOPASSWD: /usr/bin/echo, /usr/bin/lspci, /usr/sbin/dmidecode, /usr/sbin/smbios, /usr/sbin/lvs, /usr/sbin/pvs, /usr/sbin/vgs, /usr/sbin/ifconfig, /usr/sbin/lshw
-EOF
-    chmod 440 "$SUDOERS_FILE"
-}
-
 setup_user
 setup_sudo
+
 echo "User \"$USERNAME\" setup successfully."
