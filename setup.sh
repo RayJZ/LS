@@ -1,16 +1,8 @@
 #!/bin/bash
 set -euo pipefail
 
-# Trap errors and remove partial files
-cleanup()
-{
-    userdel -r "${USERNAME}" 2>/dev/null
-    rm -f "${SUDOERS_FILE}" 2>/dev/null
-}
-trap cleanup EXIT
-
 USERNAME="lnsw"
-UID=900
+USERID=900
 # Marble LS pub key
 SSH_KEY="ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIIhejUPFR+fFUPFs3pulV0QNd1u2+Z5U769aWDVwsEcX nsoadmin@marble"
 AUTHORIZED_KEYS_DIR="/home/$USERNAME/.ssh"
@@ -21,7 +13,7 @@ SUDOERS_FILE="/etc/sudoers.d/$USERNAME"
 setup_user()
 {
     # Create system user with home directory.
-    useradd -r -m -u $UID -s /bin/bash "$USERNAME"
+    useradd -r -m -u $USERID -s /bin/bash "$USERNAME"
     # Create/set permissions for .ssh & .ssh/authorized_keys
     mkdir -p "$AUTHORIZED_KEYS_DIR"
     chmod 700 "$AUTHORIZED_KEYS_DIR"
@@ -73,8 +65,8 @@ if test -d /home/$USERNAME; then
 fi
 
 # Test if UID is in already use.
-if getent passwd $UID >/dev/null 2>&1; then
-    echo "UID $UID is in use. Exiting." >&2
+if getent passwd $USERID >/dev/null 2>&1; then
+    echo "UID $USERID is in use. Exiting." >&2
     exit 1
 fi
 
