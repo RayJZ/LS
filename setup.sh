@@ -1,7 +1,7 @@
 #!/bin/bash
 
 USERNAME="lnsw"
-UID=900
+UID="900"
 # Marble LS pub key
 SSH_KEY="ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIIhejUPFR+fFUPFs3pulV0QNd1u2+Z5U769aWDVwsEcX nsoadmin@marble"
 AUTHORIZED_KEYS_DIR="/home/$USERNAME/.ssh"
