@@ -13,7 +13,7 @@ SUDOERS_FILE="/etc/sudoers.d/$USERNAME"
 setup_user()
 {
     # Create system user with home directory.
-    useradd -r -m -u $USERID -s /bin/bash "$USERNAME"
+    useradd -r -m -c "Lansweeper account" -u $USERID -s /bin/bash "$USERNAME"
     # Create/set permissions for .ssh & .ssh/authorized_keys
     mkdir -p "$AUTHORIZED_KEYS_DIR"
     chmod 700 "$AUTHORIZED_KEYS_DIR"
