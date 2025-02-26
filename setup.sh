@@ -68,7 +68,7 @@ if ! test -d "/home"; then
 fi
 
 # Test for writable /home
-if ! touch "/home/.lnswtest"; then
+if ! touch "/home/.lnswtest" 2>/dev/null; then
     echo "Directory \"/home\" is not writable. This is likely due to /home being mounted by autofs. Testing for \"/usr/home\"." >&2
     HOME_WRITEABLE=false
 else
